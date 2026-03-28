@@ -1,195 +1,21 @@
-<!DOCTYPE html>
-<html lang="en"> 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UHIA Premium Player</title>
-    <style>
-        :root { --bg: #050505; --sidebar: #121212; --accent: #e50914; --text: #eee; --card-bg: #1a1a1a; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Main Hub */
-        #hub { position: fixed; top:0; left:0; width: 100%; height: 100%; background: var(--bg); z-index: 100; display: flex; justify-content: center; align-items: center; gap: 30px; }
-        .hub-item { width: 220px; height: 300px; background: var(--card-bg); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 15px; border: 3px solid transparent; outline: none; cursor: pointer; transition: 0.3s; }
-        .hub-item:focus { border-color: var(--accent); transform: scale(1.1); background: #222; }
-        .hub-item span { font-size: 1.5rem; margin-top: 15px; font-weight: bold; }
+<?php
+header("Content-Type: application/json");
+$u = "ona2022"; $p = "3545985"; $h = "http://xtvip.net:80";
+$type = $_GET['type'] ?? 'live';
 
-        /* Sidebar & Search */
-        #sidebar { width: 280px; background: var(--sidebar); display: none; flex-direction: column; border-right: 1px solid #222; }
-        .search-box { padding: 20px; display: flex; gap: 10px; }
-        .back-btn { padding: 10px; background: #333; color: white; border: none; border-radius: 4px; outline: none; cursor: pointer; }
-        .back-btn:focus { background: var(--accent); }
-        #search-input { flex-grow: 1; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 4px; outline: none; }
-        #cat-list { flex-grow: 1; overflow-y: auto; }
-        .nav-item { padding: 12px 20px; cursor: pointer; outline: none; border-left: 3px solid transparent; }
-        .nav-item:focus { background: #222; border-left-color: var(--accent); color: var(--accent); }
+// 1. Get Categories
+$cat_url = "$h/player_api.php?username=$u&password=$p&action=get_{$type}_categories";
+$cats = json_decode(file_get_contents($cat_url), true);
 
-        /* Main Grid */
-        #main { flex-grow: 1; padding: 30px; overflow-y: auto; display: none; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        .card { background: var(--card-bg); padding: 10px; border-radius: 5px; text-align: center; border: 2px solid transparent; outline: none; cursor: pointer; }
-        .card:focus { border-color: var(--accent); transform: scale(1.05); }
-        .card img { width: 100%; height: 230px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; }
+$msx = ["items" => []];
 
-        /* Details Overlay */
-        #details-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 200; display: none; padding: 50px; box-sizing: border-box; }
-        .details-container { display: flex; gap: 50px; max-width: 1100px; margin: 50px auto; }
-        .details-poster { width: 300px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .details-info { flex: 1; }
-        .imdb-badge { background: #f5c518; color: black; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-right: 10px; }
-        .btn-group { margin-top: 30px; display: flex; gap: 15px; }
-        .btn-action { padding: 15px 35px; font-size: 1.1rem; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; outline: none; }
-        .btn-play { background: var(--accent); color: white; }
-        .btn-play:focus { background: white; color: black; transform: scale(1.1); }
-        .btn-back { background: #444; color: white; }
-        .btn-back:focus { background: #666; transform: scale(1.1); }
-    </style>
-</head>
-<body>
+foreach ($cats as $c) {
+    $msx["items"][] = [
+        "title" => $c['category_name'],
+        "icon" => "folder",
+        "action" => "link:http://{YOUR_TERMUX_IP}:8080/items.php?type=$type&id=" . $c['category_id']
+    ];
+}
 
-    <div id="hub">
-        <div class="hub-item" tabindex="0" onclick="startApp('live')">📺 <span>LIVE TV</span></div>
-        <div class="hub-item" tabindex="0" onclick="startApp('movie')">🎬 <span>MOVIES</span></div>
-        <div class="hub-item" tabindex="0" onclick="startApp('series')">🍿 <span>SERIES</span></div>
-    </div>
-
-    <div id="sidebar">
-        <div class="search-box">
-            <button class="back-btn" tabindex="0" onclick="location.reload()">⬅</button>
-            <input type="text" id="search-input" placeholder="Search categories..." tabindex="0">
-        </div>
-        <div id="cat-list"></div>
-    </div>
-
-    <div id="main">
-        <h2 id="current-cat">Select a Category</h2>
-        <div class="grid" id="channel-grid"></div>
-    </div>
-
-    <div id="details-screen">
-        <div class="details-container">
-            <img id="det-poster" class="details-poster" src="">
-            <div class="details-info">
-                <h1 id="det-title" style="font-size: 2.5rem; margin-bottom: 10px;">Title</h1>
-                <p style="margin-bottom: 20px;">
-                    <span class="imdb-badge">IMDb</span> <span id="det-rating">--</span> 
-                    | <span id="det-year">----</span>
-                </p>
-                <p id="det-plot" style="font-size: 1.1rem; line-height: 1.6; color: #bbb; max-height: 200px; overflow-y: auto;">Plot...</p>
-                <p style="margin-top: 20px;"><strong>Cast:</strong> <span id="det-cast" style="color: #888;">Cast list...</span></p>
-                <div class="btn-group">
-                    <button class="btn-action btn-play" id="play-btn" tabindex="0">▶ PLAY NOW</button>
-                    <button class="btn-action btn-back" onclick="closeDetails()" tabindex="0">CLOSE</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const config = {
-            host: "http://xtvip.net:80",
-            user: "ona2022",
-            pass: "3545985"
-        };
-
-        let activeMode = 'live';
-
-        // Switch from Hub to Content
-        async function startApp(mode) {
-            activeMode = mode;
-            document.getElementById('hub').style.display = 'none';
-            document.getElementById('sidebar').style.display = 'flex';
-            document.getElementById('main').style.display = 'block';
-            loadCategories();
-        }
-
-        async function loadCategories() {
-            let action = (activeMode === 'live') ? 'get_live_categories' : 
-                         (activeMode === 'movie') ? 'get_vod_categories' : 'get_series_categories';
-            
-            const res = await fetch(`${config.host}/player_api.php?username=${config.user}&password=${config.pass}&action=${action}`);
-            const data = await res.json();
-            const list = document.getElementById('cat-list');
-            
-            list.innerHTML = data.map(c => `
-                <div class="nav-item" tabindex="0" onclick="loadGrid(${c.category_id}, '${c.category_name.replace(/'/g, "\\'")}')">
-                    ${c.category_name}
-                </div>
-            `).join('');
-            document.querySelector('.nav-item').focus();
-        }
-
-        async function loadGrid(id, name) {
-            document.getElementById('current-cat').innerText = name;
-            let action = (activeMode === 'live') ? 'get_live_streams' : 
-                         (activeMode === 'movie') ? 'get_vod_streams' : 'get_series';
-            
-            const res = await fetch(`${config.host}/player_api.php?username=${config.user}&password=${config.pass}&action=${action}&category_id=${id}`);
-            const data = await res.json();
-            const grid = document.getElementById('channel-grid');
-            
-            grid.innerHTML = data.map(item => {
-                const img = item.stream_icon || item.cover || 'https://via.placeholder.com/160x230?text=No+Image';
-                const streamId = item.stream_id || item.series_id;
-                const ext = item.container_extension || 'mp4';
-                
-                return `
-                <div class="card" tabindex="0" onclick="handleSelect('${streamId}', '${ext}')">
-                    <img src="${img}" onerror="this.src='https://via.placeholder.com/160x230?text=Error'">
-                    <div style="font-size:13px; margin-top:5px; font-weight:bold;">${item.name}</div>
-                </div>`;
-            }).join('');
-        }
-
-        function handleSelect(id, ext) {
-            if (activeMode === 'live') {
-                playStream(id, 'ts');
-            } else {
-                showMovieInfo(id, ext);
-            }
-        }
-
-        async function showMovieInfo(id, ext) {
-            let action = (activeMode === 'movie') ? 'get_vod_info' : 'get_series_info';
-            const param = (activeMode === 'movie') ? 'vod_id' : 'series_id';
-            
-            const res = await fetch(`${config.host}/player_api.php?username=${config.user}&password=${config.pass}&action=${action}&${param}=${id}`);
-            const data = await res.json();
-            
-            const info = data.info || {};
-            document.getElementById('det-title').innerText = info.name || "Untitled";
-            document.getElementById('det-poster').src = info.movie_image || info.cover || '';
-            document.getElementById('det-plot').innerText = info.plot || info.description || "No description provided.";
-            document.getElementById('det-rating').innerText = info.rating || "N/A";
-            document.getElementById('det-year').innerText = info.releasedate || "N/A";
-            document.getElementById('det-cast').innerText = info.cast || "N/A";
-
-            document.getElementById('play-btn').onclick = () => playStream(id, ext);
-            document.getElementById('details-screen').style.display = 'block';
-            document.getElementById('play-btn').focus();
-        }
-
-        function closeDetails() {
-            document.getElementById('details-screen').style.display = 'none';
-        }
-
-        function playStream(id, ext) {
-            let type = (activeMode === 'live') ? 'live' : (activeMode === 'movie') ? 'movie' : 'series';
-            const url = `${config.host}/${type}/${config.user}/${config.pass}/${id}.${ext}`;
-            console.log("Requesting Video:", url);
-            location.href = "video:" + url; // MSX Native Player trigger
-        }
-
-        // Search logic for Categories
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            document.querySelectorAll('.nav-item').forEach(i => {
-                i.style.display = i.innerText.toLowerCase().includes(term) ? "block" : "none";
-            });
-        });
-
-        // Focus the first hub item on start
-        window.onload = () => document.querySelector('.hub-item').focus();
-    </script>
-</body>
-</html>
+echo json_encode($msx);
+?>
