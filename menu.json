@@ -1,0 +1,22 @@
+{
+  "menu": [
+    {
+      "id": "live",
+      "title": "LIVE TV",
+      "icon": "https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=300",
+      "data": "https://{YOUR_GITHUB_USER}.github.io/msx/content.json?type=live"
+    },
+    {
+      "id": "movies",
+      "title": "MOVIES",
+      "icon": "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300",
+      "data": "https://{YOUR_GITHUB_USER}.github.io/msx/content.json?type=movies"
+    },
+    {
+      "id": "series",
+      "title": "SERIES",
+      "icon": "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=300",
+      "data": "https://{YOUR_GITHUB_USER}.github.io/msx/content.json?type=series"
+    }
+  ]
+}
