@@ -1,2 +1,2 @@
 # Xtream
-An Xtream IIPTV tool
+An Xtream IPTV tool
