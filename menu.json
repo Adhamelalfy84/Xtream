@@ -4,19 +4,19 @@
       "id": "live",
       "title": "LIVE TV",
       "icon": "https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=500",
-      "action": "link:http://xtvip.net:80/player_api.php?username=ona2022&password=3545985&action=get_live_categories"
+      "action": "link:https://sparkling-glade-34e3.adhamelalfy.workers.dev/?url=http://xtvip.net:80/player_api.php?username=ona2022%26password=3545985%26action=get_live_categories"
     },
     {
       "id": "movies",
       "title": "MOVIES",
       "icon": "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=500",
-      "action": "link:http://xtvip.net:80/player_api.php?username=ona2022&password=3545985&action=get_vod_categories"
+      "action": "link:https://sparkling-glade-34e3.adhamelalfy.workers.dev/?url=http://xtvip.net:80/player_api.php?username=ona2022%26password=3545985%26action=get_vod_categories"
     },
     {
       "id": "series",
       "title": "SERIES",
       "icon": "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=500",
-      "action": "link:http://xtvip.net:80/player_api.php?username=ona2022&password=3545985&action=get_series_categories"
+      "action": "link:https://sparkling-glade-34e3.adhamelalfy.workers.dev/?url=http://xtvip.net:80/player_api.php?username=ona2022%26password=3545985%26action=get_series_categories"
     }
   ]
 }
